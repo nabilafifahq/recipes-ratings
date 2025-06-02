@@ -50,38 +50,11 @@ In this project, we analyze a dataset of food.com recipes and user ratings to un
 
 We merged `RAW_recipes.csv` with `interactions.csv`, replaced ratings of 0 with NaN, and computed an average rating per recipe (`avg_rating`). We parsed the `nutrition` column into separate numeric columns (calories, fat, sugar, etc.) and converted the `tags` column into lists. We also generated summary statistics (e.g., distribution of prep times and calorie content).
 
-<iframe
-  src="assets/plot_prep_time.html"
-  width="800"
-  height="500"
-  frameborder="0"
-></iframe>
-
-*Figure 1.* Distribution of recipe prep time (capped at 240 minutes).
-
 ---
 
 ## Assessment of Missingness
 
 Because a recipe’s `avg_rating` is missing when no user rated it, this missingness is **Not Missing At Random (NMAR)**. We performed permutation tests to see whether missingness of `avg_rating` depends on features like prep time or calories.
-
-<iframe
-  src="assets/perm_minutes.html"
-  width="800"
-  height="500"
-  frameborder="0"
-></iframe>
-
-*Figure 2.* Permutation test for missing vs. non-missing `avg_rating` by prep time (p = 0.0352).
-
-<iframe
-  src="assets/perm_calories.html"
-  width="800"
-  height="500"
-  frameborder="0"
-></iframe>
-
-*Figure 3.* Permutation test for missing vs. non-missing `avg_rating` by calorie content (p ≈ 0.0000).
 
 ---
 
@@ -90,15 +63,6 @@ Because a recipe’s `avg_rating` is missing when no user rated it, this missing
 We tested whether quick (≤ 30 min) and long (> 30 min) recipes have different mean `avg_rating`:  
 - **H₀:** μ_quick = μ_long  
 - **H₁:** μ_quick ≠ μ_long  
-
-<iframe
-  src="assets/perm_quick_long.html"
-  width="800"
-  height="500"
-  frameborder="0"
-></iframe>
-
-*Figure 4.* Permutation test of mean(avg_rating_quick) − mean(avg_rating_long) (observed diff = 0.035, p ≈ 0.0000).
 
 ---
 
@@ -154,12 +118,3 @@ We checked whether our final model’s errors differ by prep‐time group:
 - **Groups:** quick (≤ 30 min) vs. long (> 30 min)  
 - **H₀:** mean AE_quick = mean AE_long  
 - **H₁ (one‐sided):** mean AE_quick > mean AE_long  
-
-<iframe
-  src="assets/perm_fairness.html"
-  width="800"
-  height="500"
-  frameborder="0"
-></iframe>
-
-*Figure 5.* Permutation test for AE_quick – AE_long. Observed AE difference > 0, p < 0.05, so the model’s errors are significantly higher on quick recipes (indicating a fairness concern).
