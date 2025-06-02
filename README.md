@@ -1,8 +1,9 @@
 # 🍽 Recipes & Ratings
 
-This is a project for University of California San Diego DSC 80
-We use dataset from 
-**Name:** Nabila Afifah Qotrunnada
+This is a project for University of California San Diego DSC 80.  
+**Name:** Nabila Afifah Qotrunnada  
+
+---
 
 ## Dataset Source
 
@@ -29,9 +30,136 @@ We use a subset that includes only recipes and reviews posted since 2008 (the or
 - **ingredients**: A list of ingredient names  
 - **n_ingredients**: Number of ingredients used  
 
-#### RAW_interactions.csv (Ratings and Reviews)  
+#### interactions.csv (Ratings and Reviews)  
 - **user_id**: User ID who submitted the review  
 - **recipe_id**: Recipe ID (links to RAW_recipes.csv)  
 - **date**: Date of the interaction  
 - **rating**: Numeric rating given (0 indicates “no rating,” which we convert to NaN)  
 - **review**: Free‐text review submitted alongside the rating  
+
+---
+
+## Introduction
+
+In this project, we analyze a dataset of food.com recipes and user ratings to understand which recipe features correlate with higher user ratings. Our central question:  
+**Do “quick” recipes (prep time ≤ 30 minutes) receive different average ratings than “long” recipes (prep time > 30 minutes)?**  
+
+---
+
+## Data Cleaning and Exploratory Data Analysis
+
+We merged `RAW_recipes.csv` with `interactions.csv`, replaced ratings of 0 with NaN, and computed an average rating per recipe (`avg_rating`). We parsed the `nutrition` column into separate numeric columns (calories, fat, sugar, etc.) and converted the `tags` column into lists. We also generated summary statistics (e.g., distribution of prep times and calorie content).
+
+<iframe
+  src="assets/plot_prep_time.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+*Figure 1.* Distribution of recipe prep time (capped at 240 minutes).
+
+---
+
+## Assessment of Missingness
+
+Because a recipe’s `avg_rating` is missing when no user rated it, this missingness is **Not Missing At Random (NMAR)**. We performed permutation tests to see whether missingness of `avg_rating` depends on features like prep time or calories.
+
+<iframe
+  src="assets/perm_minutes.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+*Figure 2.* Permutation test for missing vs. non-missing `avg_rating` by prep time (p = 0.0352).
+
+<iframe
+  src="assets/perm_calories.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+*Figure 3.* Permutation test for missing vs. non-missing `avg_rating` by calorie content (p ≈ 0.0000).
+
+---
+
+## Hypothesis Testing
+
+We tested whether quick (≤ 30 min) and long (> 30 min) recipes have different mean `avg_rating`:  
+- **H₀:** μ_quick = μ_long  
+- **H₁:** μ_quick ≠ μ_long  
+
+<iframe
+  src="assets/perm_quick_long.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+*Figure 4.* Permutation test of mean(avg_rating_quick) − mean(avg_rating_long) (observed diff = 0.035, p ≈ 0.0000).
+
+---
+
+## Framing a Prediction Problem
+
+We aim to predict each recipe’s average rating (`avg_rating`) using only recipe‐level metadata.  
+- **Problem type:** Regression  
+- **Target:** `avg_rating`  
+- **Features available at “time of prediction”:**  
+  - `minutes` (prep time)  
+  - Nutrition (`calories`, `total_fat`, `sugar`, `sodium`, `protein`, `saturated_fat`, `carbohydrates`)  
+  - `n_ingredients` (# of ingredients)  
+  - `n_steps` (# of steps)  
+  - `is_dessert` flag derived from `tags`  
+
+- **Metric:** Root Mean Squared Error (RMSE)
+
+---
+
+## Baseline Model
+
+Our baseline uses only `minutes` and `calories` in a linear regression:  
+- **Pipeline:** `StandardScaler()` → `LinearRegression()`  
+- **Train/test split:** 80% / 20% (random_state=42)  
+- **Test RMSE:** 0.6359  
+
+An RMSE of 0.6359 means predictions are off by ~0.64 rating points on average.
+
+---
+
+## Final Model
+
+To improve performance, we engineered three additional features and used a RandomForest regressor:  
+1. **`n_ingredients`** (# of ingredients)  
+2. **`protein_to_calorie`** (protein ÷ calories)  
+3. **`is_dessert`** (1 if “desserts” appears in tags)  
+
+We built a pipeline that standardizes numeric features and passes through `is_dessert`, then trained a `RandomForestRegressor`. Hyperparameters were tuned via 5‐fold CV over:  
+- `n_estimators` ∈ {50, 100}  
+- `max_depth` ∈ {5, 10, None}  
+- `min_samples_split` ∈ {2, 5}  
+
+**Best hyperparameters:** {'rf__max_depth': 5, 'rf__min_samples_split': 2, 'rf__n_estimators': 100}
+**Best CV RMSE:** 0.6404  
+**Test RMSE:** 0.6341 (an improvement over the baseline’s 0.6359)
+
+---
+
+## Fairness Analysis
+
+We checked whether our final model’s errors differ by prep‐time group:  
+- **Metric:** Absolute Error (AE) = |predicted – actual|  
+- **Groups:** quick (≤ 30 min) vs. long (> 30 min)  
+- **H₀:** mean AE_quick = mean AE_long  
+- **H₁ (one‐sided):** mean AE_quick > mean AE_long  
+
+<iframe
+  src="assets/perm_fairness.html"
+  width="800"
+  height="500"
+  frameborder="0"
+></iframe>
+
+*Figure 5.* Permutation test for AE_quick – AE_long. Observed AE difference > 0, p < 0.05, so the model’s errors are significantly higher on quick recipes (indicating a fairness concern).
