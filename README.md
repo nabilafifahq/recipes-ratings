@@ -1,4 +1,6 @@
-![Warm meal](https://images.unsplash.com/photo-1577303935007-0d306ee638cf?q=80&w=3240&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)
+![Warm meal](https://image.lexica.art/full_webp/1afecf0d-5567-47bc-af3e-9665416f6de1)
+# 🍽 How Prep Time Influences Recipe Ratings
+**By:** Nabila Afifah Qotrunnada
 
 ## Introduction
 
