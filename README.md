@@ -1,8 +1,3 @@
-# 🍽 Quick Bites vs. Long Feasts: How Prep Time Influences Recipe Ratings  
-**Name:** Nabila Afifah Qotrunnada  
-
----
-
 ## Introduction
 
 We analyze a dataset of recipes and user ratings from Food.com to answer the question:  
